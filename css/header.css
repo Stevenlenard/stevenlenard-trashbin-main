@@ -1,0 +1,109 @@
+:root {
+  --bg-white: #ffffff;
+  --border-color: #d1fae5;
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.05);
+  --primary-green: #059669;
+  --text-dark: #064e3b;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  background-color: #ffffff;
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Main Header */
+.header {
+  width: 100%;
+  background: white;
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+  top: 0;
+  z-index: 1000;
+  box-shadow: var(--shadow-sm);
+}
+
+/* Inner container */
+.header-container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 16px 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Logo section */
+.logo-section {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+  color: var(--text-dark);
+}
+
+.logo-wrapper {
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.animated-logo {
+  width: 100%;
+  height: 100%;
+  animation: float 3s ease-in-out infinite;
+  filter: drop-shadow(0 4px 6px rgba(16, 185, 129, 0.2));
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-8px) rotate(2deg);
+  }
+}
+
+.logo-text h1 {
+  font-weight: 600;
+  font-size: 22px;
+  color: var(--primary-green);
+}
+
+.logo-text p {
+  font-size: 13px;
+  color: #065f46;
+}
+
+/* Navigation Links */
+.nav-links {
+  display: flex;
+  gap: 40px;
+}
+
+.nav-links a {
+  color: #064e3b;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.3s, transform 0.2s;
+}
+
+.nav-links a:hover {
+  color: var(--primary-green);
+  transform: translateY(-2px);
+}
+
+/* Remove white space on page edges */
+body, html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
