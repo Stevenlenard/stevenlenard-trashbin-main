@@ -12,8 +12,6 @@
 </head>
 <body>
 
-<?php include 'includes/header.php'; ?>
-
   <div class="login-container">
     <div class="login-wrapper">
       <!-- Left Side - Branding -->
@@ -109,8 +107,6 @@
       </div>
     </div>
   </div>
-
-    <?php include 'includes/footer.php'; ?>
 
   <script src="js/login.js"></script>
 </body>

@@ -5,6 +5,15 @@ if (!isLoggedIn() || !isAdmin()) {
     header('Location: login.php');
     exit;
 }
+
+$janitors_query = "SELECT user_id, CONCAT(first_name, ' ', last_name) as full_name FROM users WHERE role = 'janitor' AND status = 'active' ORDER BY first_name";
+$janitors_result = $conn->query($janitors_query);
+$janitors = [];
+if ($janitors_result) {
+    while ($row = $janitors_result->fetch_assoc()) {
+        $janitors[] = $row;
+    }
+}
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -141,14 +150,15 @@ if (!isLoggedIn() || !isAdmin()) {
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Add New Bin</h5>
+          <h5 class="modal-title"><i class="fas fa-trash-can me-2"></i>Add New Bin</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
           <form id="addBinForm">
+            <!-- Removed binId field - bin_id auto-generates in database -->
             <div class="mb-3">
-              <label for="binId" class="form-label">Bin ID</label>
-              <input type="text" class="form-control" id="binId" required>
+              <label for="binCode" class="form-label">Bin Code</label>
+              <input type="text" class="form-control" id="binCode" required>
             </div>
             <div class="mb-3">
               <label for="binLocation" class="form-label">Location</label>
@@ -167,6 +177,25 @@ if (!isLoggedIn() || !isAdmin()) {
               <label for="binCapacity" class="form-label">Capacity (%)</label>
               <input type="number" class="form-control" id="binCapacity" min="0" max="100" value="0" required>
             </div>
+            <div class="mb-3">
+              <label for="binStatus" class="form-label">Status</label>
+              <select class="form-select" id="binStatus" required>
+                <option value="">Select status</option>
+                <option value="empty">Empty</option>
+                <option value="full">Full</option>
+                <option value="needs_attention">Needs Attention</option>
+              </select>
+            </div>
+            <!-- Added Assign Janitor field to the form -->
+            <div class="mb-3">
+              <label for="binAssignedJanitor" class="form-label">Assign Janitor</label>
+              <select class="form-select" id="binAssignedJanitor">
+                <option value="">Select janitor (optional)</option>
+                <?php foreach ($janitors as $janitor): ?>
+                  <option value="<?php echo $janitor['user_id']; ?>"><?php echo htmlspecialchars($janitor['full_name']); ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
           </form>
         </div>
         <div class="modal-footer">
@@ -184,6 +213,13 @@ if (!isLoggedIn() || !isAdmin()) {
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       loadAllBins();
+      
+      const addBinModal = document.getElementById('addBinModal');
+      if (addBinModal) {
+        addBinModal.addEventListener('show.bs.modal', function() {
+          loadJanitorsForBinForm();
+        });
+      }
       
       // Search functionality
       document.getElementById('searchBinsInput').addEventListener('keyup', function() {

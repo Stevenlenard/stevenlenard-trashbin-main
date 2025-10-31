@@ -40,3 +40,4 @@ try {
     sendJSON(['success' => false, 'message' => $e->getMessage()]);
 }
 ?>
+    

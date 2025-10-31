@@ -1,10 +1,7 @@
-// Import Bootstrap
-import bootstrap from "bootstrap"
-
 // Dashboard Functions
 async function loadDashboardData() {
   try {
-    const response = await fetch("api/get-dashboard-data.php")
+    const response = await fetch("includes/get-dashboard-data.php")
     const data = await response.json()
 
     if (data.success) {
@@ -46,144 +43,296 @@ function loadBinsTable(bins) {
   })
 }
 
-// Bins Functions
-async function loadAllBins(filter = "all") {
-  try {
-    const response = await fetch(`api/get-bins.php?filter=${filter}`)
-    const data = await response.json()
-
-    if (data.success) {
-      const tbody = document.getElementById("allBinsTableBody")
-      tbody.innerHTML = ""
-
-      if (data.bins.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No bins found</td></tr>'
-        return
-      }
-
-      data.bins.forEach((bin) => {
-        const row = `
-                    <tr>
-                        <td><span class="badge bg-primary">${bin.bin_code}</span></td>
-                        <td>${bin.location}</td>
-                        <td><span class="badge bg-info">${bin.type}</span></td>
-                        <td><span class="badge bg-${getStatusColor(bin.status)}">${bin.status}</span></td>
-                        <td class="d-none d-lg-table-cell">${bin.capacity}%</td>
-                        <td class="d-none d-md-table-cell">${bin.assigned_to || "Unassigned"}</td>
-                        <td class="text-end">
-                            <div class="btn-group btn-group-sm" role="group">
-                                <button class="btn btn-outline-primary" onclick="editBin(${bin.bin_id})">Edit</button>
-                                <button class="btn btn-outline-danger" onclick="deleteBin(${bin.bin_id})">Delete</button>
-                            </div>
-                        </td>
-                    </tr>
-                `
-        tbody.innerHTML += row
-      })
-    }
-  } catch (error) {
-    console.error("Error loading bins:", error)
+function loadAllBins(status = "all") {
+  const tbody = document.getElementById("allBinsTableBody")
+  if (!tbody) {
+    console.error("allBinsTableBody element not found")
+    return
   }
+
+  tbody.innerHTML =
+    '<tr><td colspan="7" class="text-center py-4"><span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span></td></tr>'
+
+  const statusParam = status && status !== "all" ? `?status=${status}` : ""
+  const endpoint = `includes/get-bins.php${statusParam}`
+
+  fetch(endpoint)
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      return response.text().then((text) => {
+        try {
+          return JSON.parse(text)
+        } catch (e) {
+          throw new Error("Server returned invalid JSON. Check if bins table exists in database.")
+        }
+      })
+    })
+    .then((data) => {
+      if (data.success) {
+        displayBinsTable(data.data)
+      } else {
+        tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No bins found. Add one to get started.</td></tr>`
+      }
+    })
+    .catch((error) => {
+      tbody.innerHTML = `<tr><td colspan="7" class="text-center py-4 text-muted">No bins found. Add one to get started.</td></tr>`
+    })
 }
 
-async function saveNewBin() {
-  const binCode = document.getElementById("binId").value
-  const location = document.getElementById("binLocation").value
+function displayBinsTable(bins) {
+  const tbody = document.getElementById("allBinsTableBody")
+  if (!tbody) return
+
+  tbody.innerHTML = ""
+
+  if (bins.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="7" class="text-center py-4 text-muted">No bins found</td></tr>'
+    return
+  }
+
+  bins.forEach((bin) => {
+    const statusBadge = getStatusBadge(bin.status)
+    const assignedTo = bin.assigned_to_name || "Unassigned"
+    const row = document.createElement("tr")
+    row.innerHTML = `
+      <td>${bin.bin_code}</td>
+      <td>${bin.location}</td>
+      <td>${bin.type}</td>
+      <td>${statusBadge}</td>
+      <td>${bin.capacity}%</td>
+      <td>${assignedTo}</td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-primary" onclick="editBin(${bin.bin_id})">Edit</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteBin(${bin.bin_id})">Delete</button>
+      </td>
+    `
+    tbody.appendChild(row)
+  })
+}
+
+function getStatusBadge(status) {
+  const badges = {
+    full: '<span class="badge bg-danger">Full</span>',
+    empty: '<span class="badge bg-success">Empty</span>',
+    needs_attention: '<span class="badge bg-warning">Needs Attention</span>',
+    in_progress: '<span class="badge bg-info">In Progress</span>',
+    out_of_service: '<span class="badge bg-secondary">Out of Service</span>',
+  }
+  return badges[status] || '<span class="badge bg-secondary">Unknown</span>'
+}
+
+function loadJanitorsForBinForm() {
+  const dropdown = document.getElementById("binAssignedJanitor")
+  if (!dropdown) {
+    console.error("binAssignedJanitor element not found")
+    return
+  }
+
+  fetch("includes/get-janitors.php")
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success && data.data) {
+        dropdown.innerHTML = '<option value="">Select Janitor (Optional)</option>'
+        data.data.forEach((janitor) => {
+          const option = document.createElement("option")
+          option.value = janitor.user_id
+          option.textContent = `${janitor.first_name} ${janitor.last_name}`
+          dropdown.appendChild(option)
+        })
+      }
+    })
+    .catch((error) => {
+      console.error("Error loading janitors:", error)
+    })
+}
+
+window.saveNewBin = () => {
+  const binCode = document.getElementById("binCode").value.trim()
+  const location = document.getElementById("binLocation").value.trim()
   const type = document.getElementById("binType").value
   const capacity = document.getElementById("binCapacity").value
+  const status = document.getElementById("binStatus").value
+  const assignedTo = document.getElementById("binAssignedJanitor").value
 
-  try {
-    const response = await fetch("api/add-bin.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ bin_code: binCode, location, type, capacity }),
-    })
-    const data = await response.json()
-
-    if (data.success) {
-      alert("Bin added successfully!")
-      bootstrap.Modal.getInstance(document.getElementById("addBinModal")).hide()
-      loadAllBins()
-    } else {
-      alert("Error: " + data.message)
-    }
-  } catch (error) {
-    console.error("Error saving bin:", error)
-    alert("Error saving bin")
+  if (!binCode || !location || !type || !capacity || !status) {
+    alert("Please fill in all required fields")
+    return
   }
-}
 
-// Janitors Functions
-async function loadAllJanitors(filter = "all") {
-  try {
-    const response = await fetch(`api/get-janitors.php?filter=${filter}`)
-    const data = await response.json()
-
-    if (data.success) {
-      const tbody = document.getElementById("janitorsTableBody")
-      tbody.innerHTML = ""
-
-      if (data.janitors.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No janitors found</td></tr>'
-        return
+  fetch("includes/add-bin.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      bin_code: binCode,
+      location: location,
+      type: type,
+      capacity: Number.parseInt(capacity),
+      status: status,
+      assigned_to: assignedTo || null,
+    }),
+  })
+    .then((response) => {
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
       }
+      return response.json()
+    })
+    .then((data) => {
+      if (data.success) {
+        alert(`Bin "${binCode}" added successfully!`)
 
-      data.janitors.forEach((janitor) => {
-        const row = `
-                    <tr>
-                        <td>${janitor.first_name} ${janitor.last_name}</td>
-                        <td>${janitor.email}</td>
-                        <td class="d-none d-md-table-cell">${janitor.phone}</td>
-                        <td class="d-none d-lg-table-cell">${janitor.assigned_bins}</td>
-                        <td><span class="badge bg-${janitor.status === "active" ? "success" : "secondary"}">${janitor.status}</span></td>
-                        <td class="text-end">
-                            <div class="btn-group btn-group-sm" role="group">
-                                <button class="btn btn-outline-primary" onclick="editJanitor(${janitor.user_id})">Edit</button>
-                                <button class="btn btn-outline-danger" onclick="deleteJanitor(${janitor.user_id})">Delete</button>
-                            </div>
-                        </td>
-                    </tr>
-                `
-        tbody.innerHTML += row
-      })
-    }
-  } catch (error) {
-    console.error("Error loading janitors:", error)
-  }
+        const modalElement = document.getElementById("addBinModal")
+        const modal = window.bootstrap.Modal.getInstance(modalElement)
+        if (modal) {
+          modal.hide()
+        }
+
+        // Reset form
+        document.getElementById("addBinForm").reset()
+
+        // Reload bins table after a short delay to ensure database insert completes
+        setTimeout(() => {
+          loadAllBins()
+        }, 500)
+      } else {
+        alert(`Error: ${data.message}`)
+      }
+    })
+    .catch((error) => {
+      alert("Error adding bin: " + error.message)
+    })
 }
 
-async function saveNewJanitor() {
-  const firstName = document.getElementById("janitorName").value.split(" ")[0]
-  const lastName = document.getElementById("janitorName").value.split(" ").slice(1).join(" ")
-  const email = document.getElementById("janitorEmail").value
-  const phone = document.getElementById("janitorPhone").value
+window.editBin = (binId) => {
+  alert("Edit functionality will be implemented")
+}
+
+window.deleteBin = (binId) => {
+  if (!confirm("Are you sure you want to delete this bin?")) return
+  alert("Delete functionality will be implemented")
+}
+
+window.saveNewJanitor = () => {
+  const firstName = document.getElementById("janitorFirstName").value.trim()
+  const lastName = document.getElementById("janitorLastName").value.trim()
+  const email = document.getElementById("janitorEmail").value.trim()
+  const phone = document.getElementById("janitorPhone").value.trim()
   const status = document.getElementById("janitorStatus").value
 
-  try {
-    const response = await fetch("api/add-janitor.php", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ first_name: firstName, last_name: lastName, email, phone, status }),
-    })
-    const data = await response.json()
-
-    if (data.success) {
-      alert("Janitor added successfully!")
-      bootstrap.Modal.getInstance(document.getElementById("addJanitorModal")).hide()
-      loadAllJanitors()
-    } else {
-      alert("Error: " + data.message)
-    }
-  } catch (error) {
-    console.error("Error saving janitor:", error)
-    alert("Error saving janitor")
+  if (!firstName || !lastName || !email || !phone || !status) {
+    alert("Please fill in all required fields")
+    return
   }
+
+  fetch("includes/add-janitor.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      phone: phone,
+      status: status,
+    }),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        alert("Janitor added successfully!")
+
+        // Close modal
+        const modal = window.bootstrap.Modal.getInstance(document.getElementById("addJanitorModal"))
+        modal.hide()
+
+        // Reset form
+        document.getElementById("addJanitorForm").reset()
+
+        // Reload janitors table
+        loadAllJanitors()
+
+        loadJanitorsForBinForm()
+      } else {
+        alert(`Error: ${data.message}`)
+      }
+    })
+    .catch((error) => {
+      console.error("Error:", error)
+      alert("Error adding janitor")
+    })
+}
+
+function loadAllJanitors(filter = "all") {
+  const tbody = document.getElementById("janitorsTableBody")
+  if (!tbody) return
+
+  const filterParam = filter && filter !== "all" ? `?status=${filter}` : ""
+
+  fetch(`includes/get-janitors.php${filterParam}`)
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        displayJanitorsTable(data.data)
+      } else {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-danger">Error: ${data.message}</td></tr>`
+      }
+    })
+    .catch((error) => {
+      console.error("Error loading janitors:", error)
+      tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-danger">Error loading janitors</td></tr>'
+    })
+}
+
+function displayJanitorsTable(janitors) {
+  const tbody = document.getElementById("janitorsTableBody")
+  if (!tbody) return
+
+  tbody.innerHTML = ""
+
+  if (janitors.length === 0) {
+    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No janitors found</td></tr>'
+    return
+  }
+
+  janitors.forEach((janitor) => {
+    const statusBadge =
+      janitor.status === "active"
+        ? '<span class="badge bg-success">Active</span>'
+        : '<span class="badge bg-secondary">Inactive</span>'
+    const row = document.createElement("tr")
+    row.innerHTML = `
+      <td>${janitor.first_name} ${janitor.last_name}</td>
+      <td>${janitor.email}</td>
+      <td class="d-none d-md-table-cell">${janitor.phone}</td>
+      <td class="d-none d-lg-table-cell">${janitor.assigned_bins || 0}</td>
+      <td>${statusBadge}</td>
+      <td class="text-end">
+        <button class="btn btn-sm btn-primary" onclick="editJanitor(${janitor.user_id})">Edit</button>
+        <button class="btn btn-sm btn-outline-danger" onclick="deleteJanitor(${janitor.user_id})">Delete</button>
+      </td>
+    `
+    tbody.appendChild(row)
+  })
+}
+
+window.editJanitor = (janitorId) => {
+  alert("Edit functionality will be implemented")
+}
+
+window.deleteJanitor = (janitorId) => {
+  if (!confirm("Are you sure you want to delete this janitor?")) return
+  alert("Delete functionality will be implemented")
 }
 
 // Notifications Functions
 async function loadNotifications(filter = "all") {
   try {
-    const response = await fetch(`api/get-notifications.php?filter=${filter}`)
+    const response = await fetch(`includes/get-notifications.php?filter=${filter}`)
     const data = await response.json()
 
     if (data.success) {
@@ -227,7 +376,7 @@ async function loadNotifications(filter = "all") {
 // Reports Functions
 async function loadReports() {
   try {
-    const response = await fetch("api/get-reports.php")
+    const response = await fetch("includes/get-reports.php")
     const data = await response.json()
 
     if (data.success) {
@@ -262,7 +411,7 @@ async function loadReports() {
 // Profile Functions
 async function loadProfile() {
   try {
-    const response = await fetch("api/get-profile.php")
+    const response = await fetch("includes/get-profile.php")
     const data = await response.json()
 
     if (data.success) {
@@ -288,7 +437,7 @@ async function updateProfile(e) {
   }
 
   try {
-    const response = await fetch("api/update-profile.php", {
+    const response = await fetch("includes/update-profile.php", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(data),
@@ -327,26 +476,6 @@ function getNotificationColor(type) {
     success: "success",
   }
   return colors[type] || "secondary"
-}
-
-function editBin(binId) {
-  console.log("Edit bin:", binId)
-}
-
-function deleteBin(binId) {
-  if (confirm("Are you sure you want to delete this bin?")) {
-    console.log("Delete bin:", binId)
-  }
-}
-
-function editJanitor(janitorId) {
-  console.log("Edit janitor:", janitorId)
-}
-
-function deleteJanitor(janitorId) {
-  if (confirm("Are you sure you want to delete this janitor?")) {
-    console.log("Delete janitor:", janitorId)
-  }
 }
 
 function viewNotification(notifId) {

@@ -1234,12 +1234,12 @@ Completed Collections: 133
 }
 
 window.saveNewBin = () => {
-  const binId = document.getElementById("newBinId").value
-  const location = document.getElementById("newBinLocation").value
-  const type = document.getElementById("newBinType").value
-  const capacity = document.getElementById("newBinCapacity").value
-  const status = document.getElementById("newBinStatus").value
-  const assignedTo = document.getElementById("newBinAssignedTo").value
+  const binId = document.getElementById("binId").value
+  const location = document.getElementById("binLocation").value
+  const type = document.getElementById("binType").value
+  const capacity = document.getElementById("binCapacity").value
+  const status = document.getElementById("binStatus").value
+  const assignedJanitor = document.getElementById("binAssignedJanitor").value
 
   if (!binId || !location || !type || !capacity || !status) {
     alert("Please fill in all required fields")
@@ -1251,28 +1251,57 @@ window.saveNewBin = () => {
     return
   }
 
-  const newBin = {
-    id: binId,
+  const binData = {
+    bin_code: binId,
     location: location,
     type: type,
+    capacity: Number.parseInt(capacity),
     status: status,
-    lastEmptied: "Never",
-    capacity: capacity + "%",
-    assignedTo: assignedTo || "Unassigned",
+    assigned_to: assignedJanitor ? Number.parseInt(assignedJanitor) : null,
   }
 
-  bins.push(newBin)
+  fetch("add-bin.php", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(binData),
+  })
+    .then((response) => response.json())
+    .then((data) => {
+      if (data.success) {
+        const newBin = {
+          id: binId,
+          location: location,
+          type: type,
+          status: status,
+          lastEmptied: "Never",
+          capacity: capacity + "%",
+          assignedTo: assignedJanitor ? "Janitor #" + assignedJanitor : "Unassigned",
+        }
 
-  const modal = bootstrap.Modal.getInstance(document.getElementById("addBinModal"))
-  modal.hide()
+        bins.push(newBin)
 
-  loadAllBinsTable()
-  loadBinsTable()
-  loadDashboardData()
+        const modal = bootstrap.Modal.getInstance(document.getElementById("addBinModal"))
+        modal.hide()
 
-  document.getElementById("addBinForm").reset()
+        loadAllBinsTable()
+        loadBinsTable()
+        loadDashboardData()
 
-  alert(`Bin "${binId}" added successfully!`)
+        document.getElementById("addBinForm").reset()
+
+        alert(`Bin "${binId}" added successfully to database!`)
+        console.log("[v0] Bin added:", data)
+      } else {
+        alert("Error adding bin: " + data.message)
+        console.error("[v0] Error response:", data)
+      }
+    })
+    .catch((error) => {
+      console.error("[v0] Fetch error:", error)
+      alert("Error communicating with server: " + error.message)
+    })
 }
 
 window.saveNewJanitor = () => {
@@ -1334,7 +1363,7 @@ window.filterChart = (period, chartType) => {
 
 window.editBin = editBin
 window.deleteBin = deleteBin
-window.editJanitor = editJanitor
+window.editJanitor = window.openEditJanitorModal
 window.deleteJanitor = deleteJanitor
 window.dismissNotification = dismissNotification
 window.markNotificationRead = markNotificationRead
