@@ -1,10 +1,4 @@
 <?php
-// Start session
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
-
-// Include database configuration
 require_once 'includes/config.php';
 
 // Set response header
@@ -45,18 +39,22 @@ if (!empty($response['errors'])) {
 }
 
 try {
+    error_log("[v0] Attempting login for email: " . $email);
+    
     $stmt = $pdo->prepare('SELECT user_id, first_name, last_name, email, password, role, status FROM users WHERE email = ?');
     $stmt->execute([$email]);
     $user = $stmt->fetch(PDO::FETCH_ASSOC);
 
     if (!$user || !password_verify($password, $user['password'])) {
         $response['errors']['general'] = 'Invalid email or password';
+        error_log("[v0] Login failed for email: " . $email . " - Invalid credentials");
         echo json_encode($response);
         exit;
     }
 
     if ($user['status'] !== 'active') {
         $response['errors']['general'] = 'Your account is inactive. Please contact an administrator.';
+        error_log("[v0] Login failed for email: " . $email . " - Account inactive");
         echo json_encode($response);
         exit;
     }
@@ -65,6 +63,8 @@ try {
     $_SESSION['email'] = $user['email'];
     $_SESSION['name'] = $user['first_name'] . ' ' . $user['last_name'];
     $_SESSION['role'] = $user['role'];
+
+    error_log("[Login successful for email: " . $email . " with role: " . $user['role']);
 
     $logStmt = $pdo->prepare("INSERT INTO activity_logs (user_id, action, entity_type, entity_id, description, ip_address, user_agent) VALUES (?, ?, ?, ?, ?, ?, ?)");
     $logStmt->execute([
@@ -91,7 +91,8 @@ try {
     $response['message'] = 'Login successful! Redirecting...';
 
 } catch (PDOException $e) {
-    $response['errors']['general'] = 'Database error: ' . $e->getMessage();
+    error_log("[Database error during login: " . $e->getMessage());
+    $response['errors']['general'] = 'Database error. Please try again later.';
 }
 
 echo json_encode($response);

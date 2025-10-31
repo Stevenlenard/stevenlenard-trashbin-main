@@ -11,7 +11,7 @@ if (!isLoggedIn() || !isAdmin()) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bins Management - Trashbin Admin</title>
+  <title>Reports & Analytics - Trashbin Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -62,13 +62,13 @@ if (!isLoggedIn() || !isAdmin()) {
       <a href="admin-dashboard.php" class="sidebar-item">
         <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
       </a>
-      <a href="bins.php" class="sidebar-item active">
+      <a href="bins.php" class="sidebar-item">
         <i class="fa-solid fa-trash-alt"></i><span>Bins</span>
       </a>
       <a href="janitors.php" class="sidebar-item">
         <i class="fa-solid fa-users"></i><span>Janitors</span>
       </a>
-      <a href="reports.php" class="sidebar-item">
+      <a href="reports.php" class="sidebar-item active">
         <i class="fa-solid fa-chart-line"></i><span>Reports</span>
       </a>
       <a href="notifications.php" class="sidebar-item">
@@ -83,50 +83,91 @@ if (!isLoggedIn() || !isAdmin()) {
     <main class="content">
       <div class="section-header flex-column flex-md-row">
         <div>
-          <h1 class="page-title">Bin Management</h1>
-          <p class="page-subtitle">Manage all trashbins in the system</p>
+          <h1 class="page-title">Reports & Analytics</h1>
+          <p class="page-subtitle">View system reports and analytics</p>
         </div>
         <div class="d-flex gap-2 flex-column flex-md-row mt-3 mt-md-0">
-          <div class="input-group">
-            <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-            <input type="text" class="form-control border-start-0 ps-0" id="searchBinsInput" placeholder="Search bins...">
-          </div>
-          <div class="dropdown">
-            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterBinsDropdown" data-bs-toggle="dropdown">
-              <i class="fas fa-filter me-1"></i>Filter
-            </button>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterBinsDropdown">
-              <li><a class="dropdown-item" href="#" data-filter="all">All Bins</a></li>
-              <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="#" data-filter="full">Full</a></li>
-              <li><a class="dropdown-item" href="#" data-filter="empty">Empty</a></li>
-              <li><a class="dropdown-item" href="#" data-filter="needs_attention">Needs Attention</a></li>
-            </ul>
-          </div>
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBinModal">
-            <i class="fas fa-plus me-1"></i>Add New Bin
+          <button class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#createReportModal">
+            <i class="fas fa-plus me-1"></i>Create Report
+          </button>
+          <button class="btn btn-primary" onclick="exportReport()">
+            <i class="fas fa-download me-1"></i>Export
           </button>
         </div>
       </div>
 
+      <!-- Report Stats -->
+      <div class="row g-3 g-md-4 mb-4 mb-md-5">
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-trash-can"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Collections</h6>
+              <h2>156</h2>
+              <small>This month</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon warning">
+              <i class="fas fa-clock"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Pending</h6>
+              <h2>23</h2>
+              <small>Need action</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon success">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Completed</h6>
+              <h2>133</h2>
+              <small>This month</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="stat-card">
+            <div class="stat-icon">
+              <i class="fas fa-calendar"></i>
+            </div>
+            <div class="stat-content">
+              <h6>Reports</h6>
+              <h2>24</h2>
+              <small>Generated</small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Reports -->
       <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-file-alt me-2"></i>Recent Reports</h5>
+        </div>
         <div class="card-body p-0">
           <div class="table-responsive">
             <table class="table mb-0">
               <thead>
                 <tr>
-                  <th>Bin ID</th>
-                  <th>Location</th>
-                  <th>Type</th>
+                  <th>Report Name</th>
+                  <th class="d-none d-md-table-cell">Type</th>
+                  <th class="d-none d-lg-table-cell">Date Created</th>
                   <th>Status</th>
-                  <th class="d-none d-lg-table-cell">Capacity</th>
-                  <th class="d-none d-md-table-cell">Assigned To</th>
                   <th class="text-end">Action</th>
                 </tr>
               </thead>
-              <tbody id="allBinsTableBody">
+              <tbody id="reportsTableBody">
                 <tr>
-                  <td colspan="7" class="text-center py-4 text-muted">No bins found</td>
+                  <td colspan="5" class="text-center py-4 text-muted">No reports found</td>
                 </tr>
               </tbody>
             </table>
@@ -136,42 +177,42 @@ if (!isLoggedIn() || !isAdmin()) {
     </main>
   </div>
 
-  <!-- Add Bin Modal -->
-  <div class="modal fade" id="addBinModal" tabindex="-1">
+  <!-- Create Report Modal -->
+  <div class="modal fade" id="createReportModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Add New Bin</h5>
+          <h5 class="modal-title">Create New Report</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <form id="addBinForm">
+          <form id="createReportForm">
             <div class="mb-3">
-              <label for="binId" class="form-label">Bin ID</label>
-              <input type="text" class="form-control" id="binId" required>
+              <label class="form-label">Report Name</label>
+              <input type="text" class="form-control" id="reportName" placeholder="Enter report name" required>
             </div>
             <div class="mb-3">
-              <label for="binLocation" class="form-label">Location</label>
-              <input type="text" class="form-control" id="binLocation" required>
-            </div>
-            <div class="mb-3">
-              <label for="binType" class="form-label">Bin Type</label>
-              <select class="form-select" id="binType" required>
+              <label class="form-label">Report Type</label>
+              <select class="form-select" id="reportType" required>
                 <option value="">Select type</option>
-                <option value="General">General Waste</option>
-                <option value="Recyclable">Recyclable</option>
-                <option value="Organic">Organic</option>
+                <option value="collections">Collections Report</option>
+                <option value="performance">Janitor Performance</option>
+                <option value="bins">Bin Status Report</option>
               </select>
             </div>
             <div class="mb-3">
-              <label for="binCapacity" class="form-label">Capacity (%)</label>
-              <input type="number" class="form-control" id="binCapacity" min="0" max="100" value="0" required>
+              <label class="form-label">From Date</label>
+              <input type="date" class="form-control" id="reportFromDate" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">To Date</label>
+              <input type="date" class="form-control" id="reportToDate" required>
             </div>
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="saveNewBin()">Save Bin</button>
+          <button type="button" class="btn btn-primary" onclick="generateReport()">Generate Report</button>
         </div>
       </div>
     </div>
@@ -183,26 +224,23 @@ if (!isLoggedIn() || !isAdmin()) {
   <script src="js/dashboard.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      loadAllBins();
-      
-      // Search functionality
-      document.getElementById('searchBinsInput').addEventListener('keyup', function() {
-        const searchTerm = this.value.toLowerCase();
-        document.querySelectorAll('#allBinsTableBody tr').forEach(row => {
-          const text = row.textContent.toLowerCase();
-          row.style.display = text.includes(searchTerm) ? '' : 'none';
-        });
-      });
-
-      // Filter functionality
-      document.querySelectorAll('#filterBinsDropdown + .dropdown-menu .dropdown-item').forEach(item => {
-        item.addEventListener('click', function(e) {
-          e.preventDefault();
-          const filter = this.getAttribute('data-filter');
-          loadAllBins(filter);
-        });
-      });
+      loadReports();
     });
+
+    function generateReport() {
+      const name = document.getElementById('reportName').value;
+      const type = document.getElementById('reportType').value;
+      const fromDate = document.getElementById('reportFromDate').value;
+      const toDate = document.getElementById('reportToDate').value;
+      
+      console.log('Generate report:', {name, type, fromDate, toDate});
+      alert('Report generation started!');
+      bootstrap.Modal.getInstance(document.getElementById('createReportModal')).hide();
+    }
+
+    function exportReport() {
+      console.log('Export report');
+    }
   </script>
 </body>
 </html>

@@ -30,24 +30,29 @@ if (!isAdmin()) {
   <!-- Navbar -->
   <nav class="navbar navbar-expand-lg fixed-top">
     <div class="container-fluid">
-      <a class="navbar-brand" href="#">
+      <a class="navbar-brand" href="admin-dashboard.php">
         <span class="brand-circle me-2"><i class="fa-solid fa-trash-can"></i></span>
-        Trashbin Admin
+        <span class="d-none d-sm-inline">Trashbin Admin</span>
       </a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav">
         <span class="navbar-toggler-icon"></span>
-        </button>
+      </button>
       <div class="collapse navbar-collapse" id="topNav">
         <ul class="navbar-nav ms-auto align-items-lg-center">
           <li class="nav-item me-2">
-            <a class="nav-link position-relative" href="#" id="notificationsBtn">
+            <a class="nav-link position-relative" href="notifications.php" title="Notifications">
               <i class="fa-solid fa-bell"></i>
               <span class="badge rounded-pill bg-danger position-absolute translate-middle" id="notificationCount" style="top:8px; left:18px; display:none;">0</span>
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link" href="#" id="logoutBtn">
-              <i class="fa-solid fa-right-from-bracket me-1"></i>Logout
+            <a class="nav-link" href="profile.php" title="My Profile">
+              <i class="fa-solid fa-user me-1"></i><span class="d-none d-sm-inline">Profile</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="logout.php" title="Logout">
+              <i class="fa-solid fa-right-from-bracket me-1"></i><span class="d-none d-sm-inline">Logout</span>
             </a>
           </li>
         </ul>
@@ -58,63 +63,61 @@ if (!isAdmin()) {
   <div class="dashboard">
     <!-- Sidebar -->
     <aside class="sidebar" id="sidebar">
-      <div class="sidebar-header">
+      <div class="sidebar-header d-none d-md-block">
         <h6 class="sidebar-title">Menu</h6>
       </div>
-      <a href="#" class="sidebar-item active" data-section="dashboard">
+      <a href="admin-dashboard.php" class="sidebar-item active">
         <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
       </a>
-      <a href="#" class="sidebar-item" data-section="bins">
+      <a href="bins.php" class="sidebar-item">
         <i class="fa-solid fa-trash-alt"></i><span>Bins</span>
       </a>
-      <a href="#" class="sidebar-item" data-section="janitors">
+      <a href="janitors.php" class="sidebar-item">
         <i class="fa-solid fa-users"></i><span>Janitors</span>
       </a>
-      <a href="#" class="sidebar-item" data-section="reports">
+      <a href="reports.php" class="sidebar-item">
         <i class="fa-solid fa-chart-line"></i><span>Reports</span>
       </a>
-      <a href="#" class="sidebar-item" data-section="notifications">
+      <a href="notifications.php" class="sidebar-item">
         <i class="fa-solid fa-bell"></i><span>Notifications</span>
       </a>
-      <a href="#" class="sidebar-item" data-section="my-profile">
+      <a href="profile.php" class="sidebar-item">
         <i class="fa-solid fa-user"></i><span>My Profile</span>
       </a>
     </aside>
 
     <!-- Main Content -->
     <main class="content">
-      <!-- Dashboard Section -->
-      <section id="dashboardSection" class="content-section">
-        <div class="section-header">
-          <div>
-            <h1 class="page-title">Dashboard</h1>
-            <p class="page-subtitle">Welcome back! Here's your system overview.</p>
-          </div>
-          <div class="btn-group">
-            <button class="btn btn-outline-secondary btn-sm active" onclick="filterDashboard('today')">Today</button>
-            <button class="btn btn-outline-secondary btn-sm" onclick="filterDashboard('week')">Week</button>
-            <button class="btn btn-outline-secondary btn-sm" onclick="filterDashboard('month')">Month</button>
-          </div>
+      <div class="section-header">
+        <div>
+          <h1 class="page-title">Dashboard</h1>
+          <p class="page-subtitle">Welcome back! Here's your system overview.</p>
         </div>
+        <div class="btn-group d-none d-md-flex">
+          <button class="btn btn-outline-secondary btn-sm active" onclick="filterDashboard('today')">Today</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="filterDashboard('week')">Week</button>
+          <button class="btn btn-outline-secondary btn-sm" onclick="filterDashboard('month')">Month</button>
+        </div>
+      </div>
 
-        <!-- Stats Cards -->
-        <div class="row g-4 mb-5">
-          <div class="col-md-3">
+      <!-- Stats Cards -->
+      <div class="row g-3 g-md-4 mb-4 mb-md-5">
+        <div class="col-6 col-md-3">
           <div class="stat-card">
             <div class="stat-icon">
-                <i class="fa-solid fa-trash-alt"></i>
+              <i class="fa-solid fa-trash-alt"></i>
             </div>
             <div class="stat-content">
               <h6>Total Bins</h6>
               <h2 id="totalBins">0</h2>
-              <small>Active in system</small>
+              <small>Active</small>
             </div>
           </div>
-          </div>
-          <div class="col-md-3">
+        </div>
+        <div class="col-6 col-md-3">
           <div class="stat-card">
             <div class="stat-icon warning">
-                <i class="fa-solid fa-exclamation-triangle"></i>
+              <i class="fa-solid fa-exclamation-triangle"></i>
             </div>
             <div class="stat-content">
               <h6>Full Bins</h6>
@@ -122,11 +125,11 @@ if (!isAdmin()) {
               <small>Needs attention</small>
             </div>
           </div>
-          </div>
-          <div class="col-md-3">
+        </div>
+        <div class="col-6 col-md-3">
           <div class="stat-card">
             <div class="stat-icon success">
-                <i class="fa-solid fa-users"></i>
+              <i class="fa-solid fa-users"></i>
             </div>
             <div class="stat-content">
               <h6>Active Janitors</h6>
@@ -134,49 +137,64 @@ if (!isAdmin()) {
               <small>On duty</small>
             </div>
           </div>
-          </div>
-          <div class="col-md-3">
+        </div>
+        <div class="col-6 col-md-3">
           <div class="stat-card">
             <div class="stat-icon">
-                <i class="fa-solid fa-truck"></i>
+              <i class="fa-solid fa-truck"></i>
             </div>
             <div class="stat-content">
-              <h6>Collections Today</h6>
+              <h6>Collections</h6>
               <h2 id="collectionsToday">0</h2>
-              <small>Completed</small>
-              </div>
+              <small>Today</small>
             </div>
           </div>
         </div>
+      </div>
 
-        <!-- Bins Overview -->
-        <div class="card">
-          <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-trash-can me-2"></i>Bins Overview</h5>
-          </div>
-          <div class="card-body">
-            <div class="table-responsive">
-              <table class="table mb-0">
+      <!-- Bins Overview -->
+      <div class="card">
+        <div class="card-header">
+          <h5 class="mb-0"><i class="fas fa-trash-can me-2"></i>Bins Overview</h5>
+        </div>
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table mb-0">
               <thead>
                 <tr>
                   <th>Bin ID</th>
                   <th>Location</th>
                   <th>Status</th>
-                  <th>Last Emptied</th>
-                  <th>Assigned To</th>
-                    <th class="text-end">Action</th>
+                  <th class="d-none d-md-table-cell">Last Emptied</th>
+                  <th class="d-none d-lg-table-cell">Assigned To</th>
+                  <th class="text-end">Action</th>
                 </tr>
               </thead>
               <tbody id="binsTableBody">
-                  <tr>
-                    <td colspan="6" class="text-center py-4 text-muted">No bins found</td>
-                  </tr>
+                <tr>
+                  <td colspan="6" class="text-center py-4 text-muted">No bins found</td>
+                </tr>
               </tbody>
             </table>
-            </div>
           </div>
         </div>
-      </section>
+      </div>
+    </main>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="js/bootstrap.bundle.min.js"></script>
+  <script src="js/database.js"></script>
+  <script src="js/dashboard.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      loadDashboardData();
+      setInterval(loadDashboardData, 30000); // Refresh every 30 seconds
+    });
+  </script>
+</body>
+</html>
 
       <!-- Bins Section -->
       <section id="binsSection" class="content-section" style="display:none;">

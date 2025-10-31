@@ -11,7 +11,7 @@ if (!isLoggedIn() || !isAdmin()) {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Bins Management - Trashbin Admin</title>
+  <title>Janitors Management - Trashbin Admin</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -62,10 +62,10 @@ if (!isLoggedIn() || !isAdmin()) {
       <a href="admin-dashboard.php" class="sidebar-item">
         <i class="fa-solid fa-chart-pie"></i><span>Dashboard</span>
       </a>
-      <a href="bins.php" class="sidebar-item active">
+      <a href="bins.php" class="sidebar-item">
         <i class="fa-solid fa-trash-alt"></i><span>Bins</span>
       </a>
-      <a href="janitors.php" class="sidebar-item">
+      <a href="janitors.php" class="sidebar-item active">
         <i class="fa-solid fa-users"></i><span>Janitors</span>
       </a>
       <a href="reports.php" class="sidebar-item">
@@ -83,28 +83,27 @@ if (!isLoggedIn() || !isAdmin()) {
     <main class="content">
       <div class="section-header flex-column flex-md-row">
         <div>
-          <h1 class="page-title">Bin Management</h1>
-          <p class="page-subtitle">Manage all trashbins in the system</p>
+          <h1 class="page-title">Janitor Management</h1>
+          <p class="page-subtitle">Manage janitors and their assignments</p>
         </div>
         <div class="d-flex gap-2 flex-column flex-md-row mt-3 mt-md-0">
           <div class="input-group">
             <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-            <input type="text" class="form-control border-start-0 ps-0" id="searchBinsInput" placeholder="Search bins...">
+            <input type="text" class="form-control border-start-0 ps-0" id="searchJanitorsInput" placeholder="Search janitors...">
           </div>
           <div class="dropdown">
-            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterBinsDropdown" data-bs-toggle="dropdown">
+            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="filterJanitorsDropdown" data-bs-toggle="dropdown">
               <i class="fas fa-filter me-1"></i>Filter
             </button>
-            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterBinsDropdown">
-              <li><a class="dropdown-item" href="#" data-filter="all">All Bins</a></li>
+            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="filterJanitorsDropdown">
+              <li><a class="dropdown-item" href="#" data-filter="all">All Janitors</a></li>
               <li><hr class="dropdown-divider"></li>
-              <li><a class="dropdown-item" href="#" data-filter="full">Full</a></li>
-              <li><a class="dropdown-item" href="#" data-filter="empty">Empty</a></li>
-              <li><a class="dropdown-item" href="#" data-filter="needs_attention">Needs Attention</a></li>
+              <li><a class="dropdown-item" href="#" data-filter="active">Active</a></li>
+              <li><a class="dropdown-item" href="#" data-filter="inactive">Inactive</a></li>
             </ul>
           </div>
-          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addBinModal">
-            <i class="fas fa-plus me-1"></i>Add New Bin
+          <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addJanitorModal">
+            <i class="fas fa-plus me-1"></i>Add New Janitor
           </button>
         </div>
       </div>
@@ -115,18 +114,17 @@ if (!isLoggedIn() || !isAdmin()) {
             <table class="table mb-0">
               <thead>
                 <tr>
-                  <th>Bin ID</th>
-                  <th>Location</th>
-                  <th>Type</th>
+                  <th>Name</th>
+                  <th>Email</th>
+                  <th class="d-none d-md-table-cell">Phone</th>
+                  <th class="d-none d-lg-table-cell">Bins</th>
                   <th>Status</th>
-                  <th class="d-none d-lg-table-cell">Capacity</th>
-                  <th class="d-none d-md-table-cell">Assigned To</th>
                   <th class="text-end">Action</th>
                 </tr>
               </thead>
-              <tbody id="allBinsTableBody">
+              <tbody id="janitorsTableBody">
                 <tr>
-                  <td colspan="7" class="text-center py-4 text-muted">No bins found</td>
+                  <td colspan="6" class="text-center py-4 text-muted">No janitors found</td>
                 </tr>
               </tbody>
             </table>
@@ -136,42 +134,80 @@ if (!isLoggedIn() || !isAdmin()) {
     </main>
   </div>
 
-  <!-- Add Bin Modal -->
-  <div class="modal fade" id="addBinModal" tabindex="-1">
+  <!-- Add Janitor Modal -->
+  <div class="modal fade" id="addJanitorModal" tabindex="-1">
     <div class="modal-dialog">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title">Add New Bin</h5>
+          <h5 class="modal-title">Add New Janitor</h5>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
         <div class="modal-body">
-          <form id="addBinForm">
+          <form id="addJanitorForm">
             <div class="mb-3">
-              <label for="binId" class="form-label">Bin ID</label>
-              <input type="text" class="form-control" id="binId" required>
+              <label for="janitorName" class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="janitorName" required>
             </div>
             <div class="mb-3">
-              <label for="binLocation" class="form-label">Location</label>
-              <input type="text" class="form-control" id="binLocation" required>
+              <label for="janitorEmail" class="form-label">Email</label>
+              <input type="email" class="form-control" id="janitorEmail" required>
             </div>
             <div class="mb-3">
-              <label for="binType" class="form-label">Bin Type</label>
-              <select class="form-select" id="binType" required>
-                <option value="">Select type</option>
-                <option value="General">General Waste</option>
-                <option value="Recyclable">Recyclable</option>
-                <option value="Organic">Organic</option>
+              <label for="janitorPhone" class="form-label">Phone</label>
+              <input type="tel" class="form-control" id="janitorPhone" required>
+            </div>
+            <div class="mb-3">
+              <label for="janitorStatus" class="form-label">Status</label>
+              <select class="form-select" id="janitorStatus" required>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
               </select>
-            </div>
-            <div class="mb-3">
-              <label for="binCapacity" class="form-label">Capacity (%)</label>
-              <input type="number" class="form-control" id="binCapacity" min="0" max="100" value="0" required>
             </div>
           </form>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="button" class="btn btn-primary" onclick="saveNewBin()">Save Bin</button>
+          <button type="button" class="btn btn-primary" onclick="saveNewJanitor()">Save Janitor</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Janitor Modal -->
+  <div class="modal fade" id="editJanitorModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Edit Janitor</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editJanitorForm">
+            <input type="hidden" id="editJanitorId">
+            <div class="mb-3">
+              <label class="form-label">Full Name</label>
+              <input type="text" class="form-control" id="editJanitorName" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Email</label>
+              <input type="email" class="form-control" id="editJanitorEmail" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Phone</label>
+              <input type="tel" class="form-control" id="editJanitorPhone" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Status</label>
+              <select class="form-select" id="editJanitorStatus" required>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveJanitorEdit()">Save Changes</button>
         </div>
       </div>
     </div>
@@ -183,23 +219,23 @@ if (!isLoggedIn() || !isAdmin()) {
   <script src="js/dashboard.js"></script>
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      loadAllBins();
+      loadAllJanitors();
       
       // Search functionality
-      document.getElementById('searchBinsInput').addEventListener('keyup', function() {
+      document.getElementById('searchJanitorsInput').addEventListener('keyup', function() {
         const searchTerm = this.value.toLowerCase();
-        document.querySelectorAll('#allBinsTableBody tr').forEach(row => {
+        document.querySelectorAll('#janitorsTableBody tr').forEach(row => {
           const text = row.textContent.toLowerCase();
           row.style.display = text.includes(searchTerm) ? '' : 'none';
         });
       });
 
       // Filter functionality
-      document.querySelectorAll('#filterBinsDropdown + .dropdown-menu .dropdown-item').forEach(item => {
+      document.querySelectorAll('#filterJanitorsDropdown + .dropdown-menu .dropdown-item').forEach(item => {
         item.addEventListener('click', function(e) {
           e.preventDefault();
           const filter = this.getAttribute('data-filter');
-          loadAllBins(filter);
+          loadAllJanitors(filter);
         });
       });
     });
