@@ -144,9 +144,19 @@ if (!isLoggedIn() || !isAdmin()) {
         </div>
         <div class="modal-body">
           <form id="addJanitorForm">
-            <div class="mb-3">
-              <label for="janitorName" class="form-label">Full Name</label>
-              <input type="text" class="form-control" id="janitorName" required>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="janitorFirstName" class="form-label">First Name</label>
+                  <input type="text" class="form-control" id="janitorFirstName" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label for="janitorLastName" class="form-label">Last Name</label>
+                  <input type="text" class="form-control" id="janitorLastName" required>
+                </div>
+              </div>
             </div>
             <div class="mb-3">
               <label for="janitorEmail" class="form-label">Email</label>
@@ -184,9 +194,19 @@ if (!isLoggedIn() || !isAdmin()) {
         <div class="modal-body">
           <form id="editJanitorForm">
             <input type="hidden" id="editJanitorId">
-            <div class="mb-3">
-              <label class="form-label">Full Name</label>
-              <input type="text" class="form-control" id="editJanitorName" required>
+            <div class="row">
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">First Name</label>
+                  <input type="text" class="form-control" id="editJanitorFirstName" required>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="mb-3">
+                  <label class="form-label">Last Name</label>
+                  <input type="text" class="form-control" id="editJanitorLastName" required>
+                </div>
+              </div>
             </div>
             <div class="mb-3">
               <label class="form-label">Email</label>
@@ -218,6 +238,144 @@ if (!isLoggedIn() || !isAdmin()) {
   <script src="js/database.js"></script>
   <script src="js/dashboard.js"></script>
   <script>
+    function loadAllJanitors(filter = 'all') {
+      fetch(`api/get-janitors.php?filter=${filter}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            displayJanitors(data.janitors);
+          } else {
+            console.error('Error loading janitors:', data.message);
+          }
+        })
+        .catch(error => console.error('Fetch error:', error));
+    }
+
+    function displayJanitors(janitors) {
+      const tbody = document.getElementById('janitorsTableBody');
+      
+      if (janitors.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="6" class="text-center py-4 text-muted">No janitors found</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = janitors.map(janitor => `
+        <tr>
+          <td>
+            <strong>${janitor.first_name} ${janitor.last_name}</strong>
+          </td>
+          <td>${janitor.email}</td>
+          <td class="d-none d-md-table-cell">${janitor.phone}</td>
+          <td class="d-none d-lg-table-cell">
+            <span class="badge bg-info">${janitor.assigned_bins || 0}</span>
+          </td>
+          <td>
+            <span class="badge ${janitor.status === 'active' ? 'bg-success' : 'bg-secondary'}">
+              ${janitor.status.charAt(0).toUpperCase() + janitor.status.slice(1)}
+            </span>
+          </td>
+          <td class="text-end">
+            <button class="btn btn-sm btn-outline-primary" onclick="editJanitor(${janitor.user_id}, '${janitor.first_name}', '${janitor.last_name}', '${janitor.email}', '${janitor.phone}', '${janitor.status}')">
+              <i class="fas fa-edit"></i>
+            </button>
+            <button class="btn btn-sm btn-outline-danger" onclick="deleteJanitor(${janitor.user_id})">
+              <i class="fas fa-trash"></i>
+            </button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function saveNewJanitor() {
+      const formData = {
+        first_name: document.getElementById('janitorFirstName').value.trim(),
+        last_name: document.getElementById('janitorLastName').value.trim(),
+        email: document.getElementById('janitorEmail').value,
+        phone: document.getElementById('janitorPhone').value,
+        status: document.getElementById('janitorStatus').value
+      };
+
+      fetch('api/add-janitor.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            document.getElementById('addJanitorForm').reset();
+            const modal = bootstrap.Modal.getInstance(document.getElementById('addJanitorModal'));
+            modal.hide();
+            loadAllJanitors();
+            alert('Janitor added successfully');
+          } else {
+            alert('Error: ' + data.message);
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function editJanitor(userId, firstName, lastName, email, phone, status) {
+      document.getElementById('editJanitorId').value = userId;
+      document.getElementById('editJanitorFirstName').value = firstName;
+      document.getElementById('editJanitorLastName').value = lastName;
+      document.getElementById('editJanitorEmail').value = email;
+      document.getElementById('editJanitorPhone').value = phone;
+      document.getElementById('editJanitorStatus').value = status;
+      
+      const modal = new bootstrap.Modal(document.getElementById('editJanitorModal'));
+      modal.show();
+    }
+
+    function saveJanitorEdit() {
+      const formData = {
+        user_id: document.getElementById('editJanitorId').value,
+        first_name: document.getElementById('editJanitorFirstName').value.trim(),
+        last_name: document.getElementById('editJanitorLastName').value.trim(),
+        email: document.getElementById('editJanitorEmail').value,
+        phone: document.getElementById('editJanitorPhone').value,
+        status: document.getElementById('editJanitorStatus').value
+      };
+
+      fetch('api/edit-janitor.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(formData)
+      })
+        .then(response => response.json())
+        .then(data => {
+          if (data.success) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('editJanitorModal'));
+            modal.hide();
+            loadAllJanitors();
+            alert('Janitor updated successfully');
+          } else {
+            alert('Error: ' + data.message);
+          }
+        })
+        .catch(error => console.error('Error:', error));
+    }
+
+    function deleteJanitor(userId) {
+      if (confirm('Are you sure you want to delete this janitor?')) {
+        fetch('api/delete-janitor.php', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ user_id: userId })
+        })
+          .then(response => response.json())
+          .then(data => {
+            if (data.success) {
+              loadAllJanitors();
+              alert('Janitor deleted successfully');
+            } else {
+              alert('Error: ' + data.message);
+            }
+          })
+          .catch(error => console.error('Error:', error));
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
       loadAllJanitors();
       

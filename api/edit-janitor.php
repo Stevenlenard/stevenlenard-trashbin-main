@@ -8,19 +8,19 @@ if (!isLoggedIn() || !isAdmin()) {
 try {
     $data = json_decode(file_get_contents('php://input'), true);
     
+    $user_id = intval($data['user_id']);
     $first_name = $conn->real_escape_string($data['first_name']);
     $last_name = $conn->real_escape_string($data['last_name']);
     $email = $conn->real_escape_string($data['email']);
     $phone = $conn->real_escape_string($data['phone']);
     $status = $conn->real_escape_string($data['status']);
-    $password = password_hash('password', PASSWORD_DEFAULT);
-    $employee_id = 'JAN-' . str_pad(rand(10000, 99999), 5, '0', STR_PAD_LEFT);
 
-    $sql = "INSERT INTO users (employee_id, first_name, last_name, email, phone, password, role, status) 
-            VALUES ('$employee_id', '$first_name', '$last_name', '$email', '$phone', '$password', 'janitor', '$status')";
+    $sql = "UPDATE users 
+            SET first_name = '$first_name', last_name = '$last_name', email = '$email', phone = '$phone', status = '$status'
+            WHERE user_id = $user_id AND role = 'janitor'";
 
     if ($conn->query($sql)) {
-        sendJSON(['success' => true, 'message' => 'Janitor added successfully', 'user_id' => $conn->insert_id]);
+        sendJSON(['success' => true, 'message' => 'Janitor updated successfully']);
     } else {
         sendJSON(['success' => false, 'message' => $conn->error]);
     }

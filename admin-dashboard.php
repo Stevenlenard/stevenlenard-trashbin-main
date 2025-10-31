@@ -682,7 +682,7 @@ if (!isAdmin()) {
                           <div class="validation-message"></div>
                         </div>
                         <button type="submit" class="btn btn-primary btn-lg">
-                          <i class="fa-solid fa-lock me-2"></i>Update Password
+                          <i class="fa-solid fa-lock me-1"></i>Update Password
                         </button>
             </form>
                     </div>
@@ -727,28 +727,16 @@ if (!isAdmin()) {
         <div class="modal-body">
           <form id="editJanitorForm">
             <input type="hidden" id="editJanitorId">
-            <div class="form-group mb-3">
-              <label class="form-label">Full Name</label>
-              <input type="text" class="form-control" id="editJanitorName" required>
-            </div>
-            <div class="form-group mb-3">
-              <label class="form-label">Email</label>
-              <input type="email" class="form-control" id="editJanitorEmail" required>
-            </div>
-            <div class="form-group mb-3">
-              <label class="form-label">Phone</label>
-              <input type="tel" class="form-control" id="editJanitorPhone" required>
-            </div>
-            <div class="form-group mb-3">
-              <label class="form-label">Status</label>
-              <select class="form-control form-select" id="editJanitorStatus" required>
-                <option value="active">Active</option>
-                <option value="inactive">Inactive</option>
-              </select>
-            </div>
-            <div class="form-group mb-3">
-              <label class="form-label">Assigned Bins</label>
-              <input type="number" class="form-control" id="editJanitorBins" min="0" required>
+            <!-- Split full name into first name and last name fields -->
+            <div class="form-row">
+              <div class="form-group mb-3">
+                <label class="form-label">First Name</label>
+                <input type="text" class="form-control" id="editJanitorFirstName" required>
+              </div>
+              <div class="form-group mb-3">
+                <label class="form-label">Last Name</label>
+                <input type="text" class="form-control" id="editJanitorLastName" required>
+              </div>
             </div>
           </form>
         </div>
@@ -779,4 +767,206 @@ if (!isAdmin()) {
             <div class="form-group mb-3">
               <label class="form-label">Report Type</label>
               <select class="form-control form-select" id="reportType" required>
-                <
+                <option value="collections">Collections</option>
+                <option value="performance">Performance</option>
+                <option value="status">Status</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="createReport()">
+            <i class="fas fa-file-alt me-1"></i>Create Report
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add New Janitor Modal -->
+  <div class="modal fade" id="addJanitorModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-user-plus me-2"></i>Add New Janitor</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addJanitorForm">
+            <!-- Split full name into separate first name and last name fields -->
+            <div class="form-row">
+              <div class="form-group mb-3">
+                <label class="form-label">First Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="newJanitorFirstName" placeholder="Enter first name" required>
+              </div>
+              <div class="form-group mb-3">
+                <label class="form-label">Last Name <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="newJanitorLastName" placeholder="Enter last name" required>
+              </div>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Email Address <span class="text-danger">*</span></label>
+              <input type="email" class="form-control" id="newJanitorEmail" placeholder="Enter email address" required>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Phone Number <span class="text-danger">*</span></label>
+              <input type="tel" class="form-control" id="newJanitorPhone" placeholder="Enter phone number" required>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Status <span class="text-danger">*</span></label>
+              <select class="form-control form-select" id="newJanitorStatus" required>
+                <option value="">Select status</option>
+                <option value="active">Active</option>
+                <option value="inactive">Inactive</option>
+              </select>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Assigned Bins</label>
+              <input type="number" class="form-control" id="newJanitorBins" placeholder="Number of bins" value="0" min="0">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveNewJanitor()">
+            <i class="fas fa-save me-1"></i>Add Janitor
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add New Bin Modal -->
+  <div class="modal fade" id="addBinModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-trash-can me-2"></i>Add New Bin</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addBinForm">
+            <div class="form-group mb-3">
+              <label class="form-label">Bin ID <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="newBinId" placeholder="e.g., BIN-001" required>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Location <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="newBinLocation" placeholder="Enter bin location" required>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Type <span class="text-danger">*</span></label>
+              <select class="form-control form-select" id="newBinType" required>
+                <option value="">Select type</option>
+                <option value="General">General</option>
+                <option value="Recyclable">Recyclable</option>
+                <option value="Organic">Organic</option>
+              </select>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Capacity (%) <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" id="newBinCapacity" placeholder="0-100" required>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Status <span class="text-danger">*</span></label>
+              <select class="form-control form-select" id="newBinStatus" required>
+                <option value="">Select status</option>
+                <option value="empty">Empty</option>
+                <option value="full">Full</option>
+                <option value="needs_attention">Needs Attention</option>
+              </select>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Assigned To</label>
+              <input type="text" class="form-control" id="newBinAssignedTo" placeholder="Janitor name (optional)">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveNewBin()">
+            <i class="fas fa-save me-1"></i>Add Bin
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Bin Modal -->
+  <div class="modal fade" id="editBinModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-edit me-2"></i>Edit Bin</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="editBinForm">
+            <input type="hidden" id="editBinId">
+            <div class="form-group mb-3">
+              <label class="form-label">Bin ID</label>
+              <input type="text" class="form-control" id="editBinIdDisplay" readonly style="background-color: #f5f5f5; cursor: not-allowed;">
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Location</label>
+              <input type="text" class="form-control" id="editBinLocation" required>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Type</label>
+              <select class="form-control form-select" id="editBinType" required>
+                <option value="General">General</option>
+                <option value="Recyclable">Recyclable</option>
+                <option value="Organic">Organic</option>
+              </select>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Status</label>
+              <select class="form-control form-select" id="editBinStatus" required>
+                <option value="empty">Empty</option>
+                <option value="full">Full</option>
+                <option value="needs_attention">Needs Attention</option>
+              </select>
+            </div>
+            <div class="form-group mb-3">
+              <label class="form-label">Assigned To</label>
+              <input type="text" class="form-control" id="editBinAssignedTo" placeholder="Janitor name">
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="saveBinEdit()">
+            <i class="fas fa-save me-1"></i>Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- View Report Detail Modal -->
+  <div class="modal fade" id="viewReportDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"><i class="fas fa-file-alt me-2"></i>Report Details</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body" id="reportDetailContent">
+          <!-- Content loaded dynamically -->
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="js/bootstrap.bundle.min.js"></script>
+  <script src="js/database.js"></script>
+  <script src="js/admin-dashboard.js"></script>
+  <script src="js/dashboard.js"></script>
+</body>
+</html>

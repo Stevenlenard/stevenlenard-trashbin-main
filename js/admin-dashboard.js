@@ -1054,38 +1054,31 @@ function deleteJanitor(janitorId) {
 function handleLogout() {
   if (confirm("Are you sure you want to logout?")) {
     alert("Logging out...")
-    // window.location.href = "logout.php";
   }
 }
 
-// Profile Tab Switching
 function showProfileTab(tabName) {
-  // Hide all tab panes
   const tabPanes = document.querySelectorAll(".tab-pane")
   tabPanes.forEach((pane) => {
     pane.classList.remove("show", "active")
   })
 
-  // Remove active class from all menu items
   const menuItems = document.querySelectorAll(".profile-menu-item")
   menuItems.forEach((item) => {
     item.classList.remove("active")
   })
 
-  // Show the selected tab pane
   const targetPane = document.getElementById(tabName)
   if (targetPane) {
     targetPane.classList.add("show", "active")
   }
 
-  // Add active class to clicked menu item
   const clickedItem = document.querySelector(`[onclick*="${tabName}"]`)
   if (clickedItem) {
     clickedItem.classList.add("active")
   }
 }
 
-// Edit Janitor Functions
 window.openEditJanitorModal = (janitorId) => {
   const janitor = janitors.find((j) => j.id === janitorId)
   if (!janitor) {
@@ -1093,8 +1086,13 @@ window.openEditJanitorModal = (janitorId) => {
     return
   }
 
+  const nameParts = janitor.name.split(" ")
+  const firstName = nameParts[0] || ""
+  const lastName = nameParts.slice(1).join(" ") || ""
+
   document.getElementById("editJanitorId").value = janitor.id
-  document.getElementById("editJanitorName").value = janitor.name
+  document.getElementById("editJanitorFirstName").value = firstName
+  document.getElementById("editJanitorLastName").value = lastName
   document.getElementById("editJanitorEmail").value = janitor.email
   document.getElementById("editJanitorPhone").value = janitor.phone
   document.getElementById("editJanitorStatus").value = janitor.status
@@ -1113,25 +1111,24 @@ window.saveJanitorEdit = () => {
     return
   }
 
-  // Update janitor data
-  janitors[index].name = document.getElementById("editJanitorName").value
+  const firstName = document.getElementById("editJanitorFirstName").value.trim()
+  const lastName = document.getElementById("editJanitorLastName").value.trim()
+
+  janitors[index].name = `${firstName} ${lastName}`
   janitors[index].email = document.getElementById("editJanitorEmail").value
   janitors[index].phone = document.getElementById("editJanitorPhone").value
   janitors[index].status = document.getElementById("editJanitorStatus").value
   janitors[index].bins = Number.parseInt(document.getElementById("editJanitorBins").value)
 
-  // Close modal
   const modal = bootstrap.Modal.getInstance(document.getElementById("editJanitorModal"))
   modal.hide()
 
-  // Reload tables
   loadJanitorsTable()
   loadDashboardData()
 
   alert("Janitor information updated successfully!")
 }
 
-// Report Functions
 window.generateReport = () => {
   const reportName = document.getElementById("reportName").value
   const reportType = document.getElementById("reportType").value
@@ -1145,11 +1142,9 @@ window.generateReport = () => {
     return
   }
 
-  // Close modal
   const modal = bootstrap.Modal.getInstance(document.getElementById("createReportModal"))
   modal.hide()
 
-  // Add to reports table
   const reportsTableBody = document.getElementById("reportsTableBody")
   const row = document.createElement("tr")
   const dateCreated = new Date().toISOString().split("T")[0]
@@ -1167,7 +1162,6 @@ window.generateReport = () => {
   `
   reportsTableBody.insertBefore(row, reportsTableBody.firstChild)
 
-  // Simulate report generation
   setTimeout(() => {
     row.querySelector(".badge-warning").textContent = "Completed"
     row.querySelector(".badge-warning").className = "badge badge-success"
@@ -1178,14 +1172,12 @@ window.generateReport = () => {
     alert(`Report "${reportName}" generated successfully!`)
   }, 2000)
 
-  // Reset form
   document.getElementById("createReportForm").reset()
 }
 
 window.exportReport = () => {
   const date = new Date().toISOString().split("T")[0]
   alert(`Exporting report for ${date}...`)
-  // In real implementation, this would trigger actual export
 }
 
 window.viewReport = (reportId) => {
@@ -1219,7 +1211,6 @@ window.viewReport = (reportId) => {
 }
 
 window.downloadReport = (reportId) => {
-  // Create a simple text file with report data
   const content = `
 Report: ${reportId}
 Date Generated: ${new Date().toISOString().split("T")[0]}
@@ -1242,7 +1233,6 @@ Completed Collections: 133
   alert(`Report ${reportId} downloaded successfully!`)
 }
 
-// Add New Bin Function
 window.saveNewBin = () => {
   const binId = document.getElementById("newBinId").value
   const location = document.getElementById("newBinLocation").value
@@ -1256,13 +1246,11 @@ window.saveNewBin = () => {
     return
   }
 
-  // Check if bin ID already exists
   if (bins.find((b) => b.id === binId)) {
     alert("Bin ID already exists")
     return
   }
 
-  // Create new bin
   const newBin = {
     id: binId,
     location: location,
@@ -1275,120 +1263,75 @@ window.saveNewBin = () => {
 
   bins.push(newBin)
 
-  // Close modal
   const modal = bootstrap.Modal.getInstance(document.getElementById("addBinModal"))
   modal.hide()
 
-  // Reload tables
   loadAllBinsTable()
   loadBinsTable()
   loadDashboardData()
 
-  // Reset form
   document.getElementById("addBinForm").reset()
 
   alert(`Bin "${binId}" added successfully!`)
 }
 
-// Add New Janitor Function
 window.saveNewJanitor = () => {
-  const name = document.getElementById("newJanitorName").value
-  const email = document.getElementById("newJanitorEmail").value
-  const phone = document.getElementById("newJanitorPhone").value
+  const firstName = document.getElementById("newJanitorFirstName").value.trim()
+  const lastName = document.getElementById("newJanitorLastName").value.trim()
+  const email = document.getElementById("newJanitorEmail").value.trim()
+  const phone = document.getElementById("newJanitorPhone").value.trim()
   const status = document.getElementById("newJanitorStatus").value
-  const bins = Number.parseInt(document.getElementById("newJanitorBins").value)
+  const binsCount = Number.parseInt(document.getElementById("newJanitorBins").value) || 0
 
-  if (!name || !email || !phone || !status) {
+  if (!firstName || !lastName || !email || !phone || !status) {
     alert("Please fill in all required fields")
     return
   }
 
-  // Check if email already exists
   if (janitors.find((j) => j.email === email)) {
     alert("Email already exists")
     return
   }
 
-  // Create new janitor
   const newId = janitors.length > 0 ? Math.max(...janitors.map((j) => j.id)) + 1 : 1
-  const newJanitor = {
+  const fullName = `${firstName} ${lastName}`
+
+  janitors.push({
     id: newId,
-    name: name,
+    name: fullName,
     email: email,
     phone: phone,
-    bins: bins,
+    bins: binsCount,
     status: status,
-  }
+  })
 
-  janitors.push(newJanitor)
-
-  // Close modal
   const modal = bootstrap.Modal.getInstance(document.getElementById("addJanitorModal"))
   modal.hide()
 
-  // Reload tables
   loadJanitorsTable()
   loadDashboardData()
 
-  // Reset form
   document.getElementById("addJanitorForm").reset()
 
-  alert(`Janitor "${name}" added successfully!`)
+  alert(`Janitor "${fullName}" added successfully!`)
 }
 
-// Dashboard Filter Function
 window.filterDashboard = (period) => {
   const buttons = document.querySelectorAll(".btn-group .btn-outline-secondary")
   buttons.forEach((btn) => btn.classList.remove("active"))
   event.target.classList.add("active")
 
-  // Filter dashboard data based on period
   alert(`Filtering dashboard for: ${period}`)
-  // In real implementation, this would filter the data based on date range
 }
 
-// Chart Filter Function
 window.filterChart = (period, chartType) => {
   const buttons = event.target.parentElement.querySelectorAll("button")
   buttons.forEach((btn) => btn.classList.remove("active"))
   event.target.classList.add("active")
 
   alert(`Filtering ${chartType} chart for: ${period}`)
-  // In real implementation, this would update the chart data
 }
 
-// View Report Function
-window.viewReport = (reportId) => {
-  const modal = new bootstrap.Modal(document.getElementById("viewReportDetailModal"))
-  const content = document.getElementById("reportDetailContent")
-
-  content.innerHTML = `
-    <div class="mb-3">
-      <label class="form-label fw-bold">Report Name</label>
-      <p>${reportId}</p>
-    </div>
-    <div class="mb-3">
-      <label class="form-label fw-bold">Report Type</label>
-      <p>Collection Report</p>
-    </div>
-    <div class="mb-3">
-      <label class="form-label fw-bold">Date Generated</label>
-      <p>${new Date().toISOString().split("T")[0]}</p>
-    </div>
-    <div class="mb-3">
-      <label class="form-label fw-bold">Status</label>
-      <p><span class="badge badge-success">Completed</span></p>
-    </div>
-    <div class="mb-3">
-      <label class="form-label fw-bold">Summary</label>
-      <p>Total Collections: 156 | Pending: 23 | Completed: 133</p>
-    </div>
-  `
-
-  modal.show()
-}
-
-// Expose functions globally
 window.editBin = editBin
 window.deleteBin = deleteBin
 window.editJanitor = editJanitor
